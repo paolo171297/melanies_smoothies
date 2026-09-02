@@ -1,35 +1,35 @@
 # 🥤 Melanie's Smoothies
 
-**A Custom Smoothie Ordering App**
+An end-to-end data application built with **Streamlit** and **Snowflake (Snowpark)** managing custom smoothie ordering and internal kitchen fulfillment.
 
-An interactive web application built with **Streamlit** and **Snowflake (Snowpark)** that allows users to customize their smoothie orders and view real-time nutritional information. 
+*Snowflake Hands-On Essentials: Data Application Builders Workshop.*
 
-*Developed as part of the Snowflake Hands-On Essentials: Data Application Builders Workshop.*
+---
+
+## 🏗️ Architecture
+
+- **Customer App (SniS):** External Streamlit app to customize smoothies, fetch live nutritional facts via REST API (`my.smoothiefroot.com`), and submit orders to Snowflake.
+- **Kitchen Dashboard (SiS):** Internal app running natively inside Snowflake to manage pending orders (`ORDER_FILLED = 0`) and bulk-update status using `st.data_editor` and Snowpark `merge`.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Frontend & App Framework:** [Streamlit](https://streamlit.io/)
-- **Data Platform:** [Snowflake](https://www.snowflake.com/) (via native Streamlit connections)
-- **Data Engineering:** Snowpark & Pandas
-- **External API Integration:** Python `requests` library
+- **Framework:** Streamlit & Streamlit in Snowflake (SiS)
+- **Data Platform:** Snowflake & Snowpark Python API
+- **Data Processing:** Pandas, Requests
 
 ---
 
-## ✨ Features
+## ⚙️ Core Operations
 
-- **Dynamic Ingredient Selection:** Fetches available fruit options directly from the Snowflake database (`smoothies.public.fruit_options`), allowing users to pick up to 5 ingredients.
-- **Live Nutritional Data:** Dynamically queries the SmoothieFroot REST API to display real-time nutritional facts for each selected fruit.
-- **Smart Data Mapping:** Uses Pandas DataFrames for rapid, in-memory lookups (matching frontend selections to backend API search terms).
-- **Order Persistence:** Securely writes the finalized custom order and customer name back into the Snowflake database (`smoothies.public.orders`).
+```python
+# 1. Customer API Lookup (SniS)
+smoothiefroot_response = requests.get(f"[https://my.smoothiefroot.com/api/fruit/](https://my.smoothiefroot.com/api/fruit/){search_on}")
 
----
-
-## ⚙️ How It Works
-
-1. **Session Initialization:** Connects to Snowflake using `st.connection("snowflake")`.
-2. **Data Handling:** Queries tables using Snowpark and converts the output to a Pandas DataFrame for efficient array/location matching (`.loc`).
-3. **API Integration:** Calls the external API dynamically based on the selected ingredients:
-   ```python
-   smoothiefroot_response = requests.get(f"[https://my.smoothiefroot.com/api/fruit/](https://my.smoothiefroot.com/api/fruit/){search_on}")
+# 2. Kitchen Fulfillment Merge (SiS)
+og_dataset.merge(
+    edited_dataset,
+    (og_dataset['ORDER_UID'] == edited_dataset['ORDER_UID']),
+    [when_matched().update({'ORDER_FILLED': edited_dataset['ORDER_FILLED']})]
+)
